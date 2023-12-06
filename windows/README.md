@@ -15,7 +15,7 @@ To build Image
 Build the image using packer:
 
     read -p 'Enter password: ' -s password
-    packer build -var username=username -var "password=$password" windows-11.pkr.hcl
+    packer build -var "password=$password" windows-11.pkr.hcl
 
 Use the following config in virt-manager:
 
