@@ -19,9 +19,11 @@ Build the image using packer:
 
 Use the following config in virt-manager:
 
+  ```
   <cpu mode='custom' match='exact' check='partial'>
     <model fallback='allow'>Skylake-Client-noTSX-IBRS</model>
     <feature policy='disable' name='hypervisor'/>
     <feature policy='require' name='vmx'/>
     <feature policy='disable' name='mpx'/>
   </cpu>
+  ```
