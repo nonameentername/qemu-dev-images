@@ -14,8 +14,19 @@ To build Image
 
 Build the image using packer:
 
-    read -p 'Enter password: ' -s password
-    packer build -var "password=$password" windows-11.pkr.hcl
+    cd windows
+    packer build windows-11.pkr.hcl
+    vagrant box add windows_11 windows_11_libvirt.box
+
+Run with vagrant
+----------------
+
+    vagrant plugin install winrm
+    vagrant plugin install winrm-elevated
+    vagrant plugin install winrm-fs
+    vagrant plugin install vagrant-libvirt
+
+    vagrant up
 
 Use the following config in virt-manager:
 

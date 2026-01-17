@@ -8,11 +8,6 @@ packer {
   }
 }
 
-variable "password" {
-  type      = string
-  sensitive = true
-}
-
 variable "cd_files_list" {
   type    = string
   default = "drivers/*"
@@ -75,12 +70,7 @@ source "qemu" "windows_11" {
   cd_label     = "drivers"
   communicator = "winrm"
   disk_size    = "${var.disk_size}"
-  floppy_files = ["floppy/setup.cmd", "floppy/Autounattend.ps1"]
-  floppy_content = {
-    "autounattend.xml" = templatefile("floppy/Autounattend.xml.pkrtpl.hcl", {
-      password = var.password
-    })
-  }
+  floppy_files = ["floppy/setup.cmd", "floppy/Autounattend.ps1", "floppy/Autounattend.xml"]
   headless         = "${var.headless}"
   iso_checksum     = "${var.iso_checksum_type}:${var.iso_checksum}"
   iso_urls         = ["${var.iso_url}"]
@@ -88,13 +78,21 @@ source "qemu" "windows_11" {
   qemuargs         = [["-m", "4048M"], ["-cpu", "Skylake-Server-noTSX-IBRS,hypervisor=off,vmx=on,mpx=off,hv-time=on,hv-relaxed=on,hv-vapic=on,hv-spinlocks=0x1fff"], ["-m", "${var.memory}"], ["-smp", "cpus=${var.cpus}"]]
   shutdown_command = "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\""
   vm_name          = "${var.vm_name}"
-  winrm_password   = "${var.password}"
+  winrm_password   = "vagrant"
   winrm_timeout    = "10000s"
-  winrm_username   = "Administrator"
+  winrm_username   = "vagrant"
 }
 
 build {
   sources = ["source.qemu.windows_11"]
+
+  provisioner "powershell" {
+    valid_exit_codes = [0, 259]
+    inline = [
+      "pnputil.exe /add-driver 'E:\\virtio-win-0.1.135\\NetKVM\\w11\\amd64\\netkvm.inf' /install",
+      "pnputil.exe /add-driver 'E:\\virtio-win-0.1.135\\viostor\\w11\\amd64\\viostor.inf' /install"
+    ]
+  } 
 
   provisioner "windows-shell" {
     scripts = [
@@ -133,6 +131,14 @@ build {
   }
 
   provisioner "windows-shell" {
-    inline = ["net user Administrator ${var.password}"]
+    inline = ["net user vagrant vagrant"]
+  }
+
+  post-processors {
+    post-processor "vagrant" {
+      keep_input_artifact = true
+      output = "windows_11_{{.Provider}}.box"
+      vagrantfile_template = "vagrantfile-windows_11.template"
+    }
   }
 }

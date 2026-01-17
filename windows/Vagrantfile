@@ -1,0 +1,44 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.require_version ">= 1.6.2"
+
+Vagrant.configure("2") do |config|
+    config.vm.define "vagrant-windows-11"
+    config.vm.box = "windows_11"
+    config.vm.communicator = "winrm"
+
+    # Admin user name and password
+    config.winrm.username = "vagrant"
+    config.winrm.password = "vagrant"
+
+    config.vm.guest = :windows
+    config.windows.halt_timeout = 15
+
+    config.vm.network :forwarded_port, guest: 3389, host: 3389, id: "rdp", auto_correct: true
+
+    config.vm.provider :libvirt do |libvirt, override|
+        libvirt.memory = 2048
+        libvirt.cpus = 2
+
+        if Vagrant.has_plugin?("vagrant-winrm-syncedfolders")
+            override.vm.synced_folder ".", "/vagrant", type: "winrm"
+        else
+            override.vm.synced_folder ".", "/vagrant", disabled: true
+        end
+
+        libvirt.driver = 'kvm'
+        libvirt.cpu_mode = 'host-passthrough'
+        libvirt.nested = true
+
+        libvirt.tpm_model = "tpm-crb"
+        libvirt.tpm_type = "emulator"
+        libvirt.tpm_version = "2.0"
+
+        libvirt.hyperv_feature :name => 'vpindex', :state => 'on'
+        libvirt.hyperv_feature :name => 'synic',   :state => 'on'
+        libvirt.hyperv_feature :name => 'stimer',  :state => 'on'
+
+        libvirt.clock_timer :name => 'hypervclock', :present => 'yes'
+    end
+end

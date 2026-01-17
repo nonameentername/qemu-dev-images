@@ -1,2 +1,4 @@
 packer_cache
 output-windows-11
+windows/windows_11_libvirt.box
+windows/.vagrant
